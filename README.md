@@ -66,7 +66,7 @@ Speaks instructions again → back to Listening
 **Requirements:** Python 3.9+, internet connection (for Google STT and gTTS)
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/VisualEcho.git
+git clone https://github.com/Badrelmb/VisualEcho.git
 cd VisualEcho
 pip install -r requirements.txt
 ```
