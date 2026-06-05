@@ -78,8 +78,7 @@ def init_recognizer():
     try:
         import speech_recognition as sr
         recognizer = sr.Recognizer()
-        recognizer.energy_threshold = 2500
-        recognizer.dynamic_energy_threshold = True
+        recognizer.dynamic_energy_threshold = False  # don't auto-adjust after each listen
         recognizer.pause_threshold = 0.8
         print("[STT] Speech recognition ready (Google STT)")
         return recognizer
@@ -89,15 +88,9 @@ def init_recognizer():
 
 
 def listen_for_command(recognizer):
-    """
-    Listen for a single voice command.
-    Returns 'start', 'quit', 'timeout', or 'unknown'.
-    """
     import speech_recognition as sr
-
     with sr.Microphone() as source:
         print("[Listening] Say 'Start' or 'Quit'...")
-        recognizer.adjust_for_ambient_noise(source, duration=0.5)
         try:
             audio = recognizer.listen(source, timeout=10, phrase_time_limit=5)
         except sr.WaitTimeoutError:
@@ -245,6 +238,14 @@ def main():
         cv2.imshow("VisualEcho", display)
         cv2.waitKey(1)
         return frame
+
+    # Calibrate microphone once at startup
+    import speech_recognition as sr
+    with sr.Microphone() as source:
+        print("[STT] Calibrating microphone...")
+        recognizer.adjust_for_ambient_noise(source, duration=1.5)
+        print(f"[STT] Energy threshold set to {recognizer.energy_threshold:.0f}")
+
 
     # Welcome
     status = "speaking"
