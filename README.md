@@ -1,55 +1,69 @@
 # VisualEcho 👁️🔊
 
-**Real-time scene narration for the visually impaired.**
+**Voice-controlled AI scene narration for the visually impaired.**
 
-VisualEcho uses your webcam and an AI vision model to continuously describe what it sees — out loud. It is designed to help visually impaired users understand their surroundings without needing to read a screen.
+VisualEcho uses your webcam and the BLIP-Large AI vision model to describe your physical surroundings out loud — entirely hands-free. No keyboard, no screen, no mouse. Just your voice.
 
 ---
 
 ## Demo
 
-> *"a person sitting at a desk with a laptop and a cup of coffee"*
-> *"a kitchen with white cabinets and a window on the left"*
-> *"two people standing outside near a street with cars parked behind them"*
+[![VisualEcho Demo](https://img.youtube.com/vi/wCaQlm_T_nk/0.jpg)](https://youtu.be/wCaQlm_T_nk)
 
-<!-- Add a demo GIF here: assets/demo.gif -->
-<!-- ![Demo](assets/demo.gif) -->
-
----
-
-## Features
-
-- 🎥 **Live webcam feed** with real-time caption overlay
-- 🧠 **AI-powered scene understanding** using BLIP (no API key, runs locally)
-- 🔊 **Text-to-speech narration** — works offline via `pyttsx3`, or online via `gTTS`
-- ⏱️ **Adjustable interval** — control how often it describes the scene
-- ⌨️ **Manual trigger** — press SPACE to describe on demand
-- 💻 **CPU-compatible** — no GPU required
+> Click the thumbnail to watch the full demo on YouTube.
 
 ---
 
 ## How It Works
 
+The user interacts with the app entirely by voice:
+
 ```
-Webcam frame
-     │
-     ▼
-BLIP Vision Model  ──►  "a person sitting at a desk with a laptop"
-     │
-     ▼
-Text-to-Speech  ──►  🔊 spoken aloud
-     │
-     ▼
-Caption overlay on video feed
+App starts
+    └─► Speaks: "Visual Echo is ready. Say Start to describe what is
+                 in front of you. Say Quit to exit."
+         │
+         ▼
+    Listening for voice command
+         │
+    ┌────┴────────────────────────────┐
+    │                                 │
+  "Start"                           "Quit"
+    │                                 │
+    ▼                                 ▼
+Speaks: "Got it.              Speaks: "Goodbye."
+Analyzing the scene,               App exits
+please wait."
+    │
+    ▼
+Captures webcam frame
+    │
+    ▼
+BLIP-Large generates caption
+    │
+    ▼
+gTTS speaks the description aloud
+    │
+    ▼
+Speaks instructions again → back to Listening
 ```
 
-The captioning and TTS each run in their own background thread, so the video feed stays smooth at all times.
+---
+
+## Features
+
+- 🎤 **Fully voice-controlled** — say "Start" to describe, "Quit" to exit
+- 🧠 **AI scene understanding** — BLIP-Large vision-language model (no API key, runs locally)
+- 🔊 **Natural-sounding speech** — Google TTS for high-quality voice output
+- 📷 **Live camera overlay** — displays system status and last caption for demo/development purposes
+- 💻 **CPU-compatible** — no GPU required
+- 🌐 **Cross-platform** — works on macOS, Windows, and Linux
 
 ---
 
 ## Installation
 
-**Requirements:** Python 3.9+
+**Requirements:** Python 3.9+, internet connection (for Google STT and gTTS)
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/VisualEcho.git
@@ -57,15 +71,26 @@ cd VisualEcho
 pip install -r requirements.txt
 ```
 
-> On first run, the BLIP model (~900MB) will be downloaded automatically from HuggingFace.
+> On first run, the BLIP-Large model (~1.5GB) downloads automatically from HuggingFace.
 
-### System TTS (for pyttsx3)
+### PyAudio (required for microphone input)
 
-| OS | Required |
-|----|----------|
-| Windows | Built-in SAPI5 — nothing to install |
-| macOS | Built-in `nsss` — nothing to install |
-| Linux | `sudo apt install espeak` |
+**macOS:**
+```bash
+brew install portaudio
+pip install pyaudio
+```
+
+**Windows:**
+```bash
+pip install pyaudio
+```
+
+**Linux:**
+```bash
+sudo apt install portaudio19-dev
+pip install pyaudio
+```
 
 ---
 
@@ -75,62 +100,64 @@ pip install -r requirements.txt
 python visual_echo.py
 ```
 
-### Controls
+The app will speak a welcome message and wait for your voice command.
 
-| Key | Action |
-|-----|--------|
-| `SPACE` | Describe the scene immediately |
-| `+` / `=` | Increase interval between descriptions |
-| `-` | Decrease interval between descriptions |
-| `Q` | Quit |
+| Voice Command | Action |
+|---------------|--------|
+| `"Start"` | Capture and describe the current scene |
+| `"Quit"` | Exit the application |
 
----
+**Accepted synonyms for Start:** "describe", "go", "scan", "look", "what"
 
-## Configuration
-
-You can edit these values at the top of `visual_echo.py`:
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `interval` | `5.0` | Seconds between auto-descriptions |
-| `model_id` | `Salesforce/blip-image-captioning-base` | HuggingFace model to use |
-
-To use the larger, more accurate BLIP-2 model (requires GPU):
-```python
-# In visual_echo.py, replace the model loading section with:
-from transformers import Blip2Processor, Blip2ForConditionalGeneration
-processor = Blip2Processor.from_pretrained("Salesforce/blip2-opt-2.7b")
-model = Blip2ForConditionalGeneration.from_pretrained("Salesforce/blip2-opt-2.7b")
-```
+**Accepted synonyms for Quit:** "exit", "stop", "close", "bye", "end"
 
 ---
 
 ## Tech Stack
 
-| Component | Library |
-|-----------|---------|
-| Webcam capture | OpenCV |
-| Scene captioning | BLIP via HuggingFace Transformers |
-| Text-to-speech | pyttsx3 (offline) / gTTS (online fallback) |
+| Component | Library / Model |
+|-----------|----------------|
+| Webcam capture & overlay | OpenCV |
+| AI scene captioning | BLIP-Large (Salesforce, via HuggingFace Transformers) |
+| Voice input | SpeechRecognition + PyAudio + Google STT |
+| Voice output | gTTS (Google Text-to-Speech) + pygame |
 | Image processing | Pillow |
-| Deep learning | PyTorch |
+| Deep learning runtime | PyTorch |
+
+---
+
+## Requirements
+
+```
+opencv-python>=4.8.0
+Pillow>=10.0.0
+transformers==4.38.0
+torch>=2.0.0
+torchvision>=0.15.0
+gTTS>=2.4.0
+pygame>=2.5.0
+numpy<2
+SpeechRecognition>=3.10.0
+pyaudio>=0.2.13
+```
 
 ---
 
 ## Limitations
 
-- Caption quality depends on lighting and camera angle
-- On CPU, inference takes 1–3 seconds per frame (hence the interval-based approach)
-- BLIP describes scenes in English only
+- Requires internet connection for Google STT (voice commands) and gTTS (voice output)
+- On CPU, caption generation takes 2–5 seconds per scene
+- Scene descriptions are in English only
+- Accuracy depends on lighting and camera angle
 
 ---
 
 ## Future Work
 
-- Depth estimation to add spatial context ("chair to your left")
+- Offline STT support using Whisper for fully local operation
+- Depth estimation to add spatial context ("chair to your left, door ahead")
 - Language selection for non-English speakers
-- Object tracking to only re-describe when the scene changes significantly
-- Mobile version using phone camera
+- Continuous mode that auto-describes when significant scene changes are detected
 
 ---
 
@@ -142,7 +169,9 @@ MIT License — free to use, modify, and distribute.
 
 ## References
 
-- [BLIP: Bootstrapping Language-Image Pre-training](https://arxiv.org/abs/2201.12086) — Salesforce Research
+- Li, J. et al. (2022). [BLIP: Bootstrapping Language-Image Pre-training](https://arxiv.org/abs/2201.12086). Salesforce Research.
 - [HuggingFace Transformers](https://github.com/huggingface/transformers)
 - [OpenCV](https://opencv.org/)
-- [pyttsx3](https://github.com/nateshmbhat/pyttsx3)
+- [SpeechRecognition](https://github.com/Uberi/speech_recognition)
+- [gTTS — Google Text-to-Speech](https://github.com/pndurette/gTTS)
+- [PyAudio](https://people.csail.mit.edu/hubert/pyaudio/)

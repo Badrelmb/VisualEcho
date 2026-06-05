@@ -222,6 +222,9 @@ def main():
 
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
+        cap = cv2.VideoCapture(1)
+    
+    if not cap.isOpened():
         print("[ERROR] Could not open webcam.")
         sys.exit(1)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
@@ -233,7 +236,12 @@ def main():
     def show_frame():
         ret, frame = cap.read()
         if not ret:
-            return None
+            cap.release()
+            cap2 = cv2.VideoCapture(0)
+            if cap2.isOpened():
+                ret, frame = cap2.read()
+            if not ret:
+                return None
         display = draw_overlay(frame.copy(), caption, status)
         cv2.imshow("VisualEcho", display)
         cv2.waitKey(1)
